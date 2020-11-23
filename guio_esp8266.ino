@@ -39,7 +39,7 @@ void setup()
 #endif
 
         memcpy_P(parameters.sig, GUIO_SIG, 4);
-        parameters.ver = 1;
+        parameters.version = 1;
         parameters.configured = false;
         parameters.force_ap = true; // this will force write to EEPROM
     }

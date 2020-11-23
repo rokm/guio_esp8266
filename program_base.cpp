@@ -33,7 +33,7 @@ void Program::loop ()
         taskCheckButton.restartDelayed();
         buttonStateChanged = false;
     }
-    
+
     // Schedule tasks
     scheduler.execute();
 }
@@ -53,6 +53,25 @@ void Program::taskBlinkLedFcn ()
     }
 }
 
+void Program::clearParametersInEeprom () const
+{
+    for (int i = 0 ; i < EEPROM.length() ; i++) {
+        EEPROM.write(i, 0);
+    }
+    EEPROM.commit();
+}
+
+void Program::writeParametersToEeprom () const
+{
+    EEPROM.put(0, parameters);
+    EEPROM.commit();
+}
+
+void Program::restartSystem () const
+{
+    ESP.restart();
+}
+
 void Program::buttonPressHandler (unsigned int duration)
 {
 #ifdef GUIO_DEBUG
@@ -60,25 +79,21 @@ void Program::buttonPressHandler (unsigned int duration)
     Serial.print(duration);
     Serial.println(F(" ms..."));
 #endif
-    
+
     if (duration > 15*TASK_SECOND) {
         Serial.println(F("Long press! Clearing EEPROM and rebooting!"));
         // clear EEPROM
-        for (int i = 0 ; i < EEPROM.length() ; i++) {
-            EEPROM.write(i, 0);
-        }
-        EEPROM.commit();
-        // reset
-        ESP.restart();
+        clearParametersInEeprom();
+        // restart
+        restartSystem();
     } else if (duration > 1*TASK_SECOND) {
         Serial.println(F("Short press! Rebooting into AP!"));
         // set forced AP flag
         parameters.force_ap = true;
         // write to EEPROM
-        EEPROM.put(0, parameters);
-        EEPROM.commit();
-        // reset
-        ESP.restart();
+        writeParametersToEeprom();
+        // restart
+        restartSystem();
     }
 }
 

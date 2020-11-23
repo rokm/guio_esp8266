@@ -15,6 +15,7 @@ public:
     virtual void setup ();
     virtual void loop ();
 
+protected:
     // Called as ISR
     void ICACHE_RAM_ATTR buttonPressIsr ();
 
@@ -22,6 +23,10 @@ public:
 
     void taskBlinkLedFcn ();
     void taskCheckButtonFcn ();
+
+    void clearParametersInEeprom () const;
+    void writeParametersToEeprom () const;
+    void restartSystem () const;
     
 protected:
     parameters_t &parameters;

@@ -12,10 +12,23 @@ static const char GUIO_SIG[4] PROGMEM = { 'G', 'U', 'I', 'O' };
 
 struct parameters_t
 {
+    // Header (8 bytes)
     char sig[4]; // GUIO
-    uint16_t ver; // version
+    uint16_t version; // version
     bool configured; // configuration valid
     bool force_ap; // force AP mode
+
+    // WiFi network settings (64 bytes)
+    char networkSsid[32];
+    char networkPassword[32];
+
+    // MQTT broker settings
+    char mqttHostName[32];
+    char mqttUserName[32];
+    char mqttUserPassword[32];
+
+    char subscribeTopic[48];
+    char publishTopic[48];
 };
 
 
