@@ -1,6 +1,7 @@
 #ifndef GUIO_ESP8266__PROGRAM_BASE_H
 #define GUIO_ESP8266__PROGRAM_BASE_H
 
+#include "config.h"
 #include "parameters.h"
 
 #include <TaskSchedulerDeclarations.h>

@@ -4,6 +4,7 @@
 
 
 // ISR must be cached in RAM!
+// Also, we have to (ab)use the global program instance because we cannot use class member as an ISR
 ICACHE_RAM_ATTR void isrButton ()
 {
     program->registerButtonStateChange();
@@ -13,8 +14,8 @@ ICACHE_RAM_ATTR void isrButton ()
 Program::Program (parameters_t &parameters)
     : parameters(parameters), // store reference to parameters struct
       scheduler(),
-      taskBlinkLed(1*TASK_SECOND, TASK_FOREVER, [] () { program->taskBlinkLedFcn(); }, &scheduler, false, nullptr, nullptr),
-      taskCheckButton(100*TASK_MILLISECOND, TASK_ONCE, [] () { program->taskCheckButtonFcn(); }, &scheduler, false, nullptr, nullptr),
+      taskBlinkLed(1*TASK_SECOND, TASK_FOREVER, std::bind(&Program::taskBlinkLedFcn, this), &scheduler, false, nullptr, nullptr),
+      taskCheckButton(100*TASK_MILLISECOND, TASK_ONCE, std::bind(&Program::taskCheckButtonFcn, this), &scheduler, false, nullptr, nullptr),
       buttonStateChanged(false),
       buttonPressTime(0)
 {

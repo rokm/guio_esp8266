@@ -8,6 +8,7 @@
 
 // Settings for TaskScheduler
 #define _TASK_SLEEP_ON_IDLE_RUN
+#define _TASK_STD_FUNCTION
 
 
 #endif
