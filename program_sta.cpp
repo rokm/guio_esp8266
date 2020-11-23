@@ -9,9 +9,13 @@ ProgramSta::ProgramSta (parameters_t &parameters)
 void ProgramSta::setup ()
 {
     Program::setup ();
+
+#ifdef GUIO_DEBUG
     Serial.println(F("*** STA mode ***"));
+#endif
 
     // Display parameters
+#ifdef GUIO_DEBUG
     Serial.print(F("Network SSID: "));
     Serial.println(parameters.networkSsid);
 
@@ -32,6 +36,7 @@ void ProgramSta::setup ()
 
     Serial.print(F("MQTT publish topic: "));
     Serial.println(parameters.publishTopic);
+#endif
 }
 
 void ProgramSta::loop ()

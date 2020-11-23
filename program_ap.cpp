@@ -20,7 +20,10 @@ ProgramAp::ProgramAp (parameters_t &parameters)
 void ProgramAp::setup ()
 {
     Program::setup();
+
+#ifdef GUIO_DEBUG
     Serial.println(F("*** AP mode ***"));
+#endif
 
     // Construct SSID and password
     //  ssid: guio_MAC
@@ -34,17 +37,21 @@ void ProgramAp::setup ()
     //snprintf_P(password, sizeof(password), PSTR("%02x%02x%02x%02x%02x%02x"), macAddr[0], macAddr[1], macAddr[2], macAddr[3], macAddr[4], macAddr[5]);
     snprintf_P(password, sizeof(password), PSTR("12345678"));
 
+#ifdef GUIO_DEBUG
     Serial.print(F("ssid: "));
     Serial.println(ssid);
     Serial.print(F("password: "));
     Serial.println(password);
+#endif
 
     // Start the AP
     bool rc;
     rc = WiFi.softAP(ssid, password);
 
+#ifdef GUIO_DEBUG
     Serial.print(F("AP status: "));
     Serial.println(rc);
+#endif
 
     // Start the web server
     AsyncCallbackJsonWebHandler *handler = new AsyncCallbackJsonWebHandler("/pair", std::bind(&ProgramAp::pairingRequestHandler, this, std::placeholders::_1, std::placeholders::_2));
@@ -66,9 +73,11 @@ void ProgramAp::pairingRequestHandler (AsyncWebServerRequest *request, JsonVaria
     digitalWrite(LED_BUILTIN, HIGH);
 
     // Dump request
+#ifdef GUIO_DEBUG
     Serial.print(F("Pairing request: "));
-    serializeJson(json, Serial);
+    serializeJsonPretty(json, Serial);
     Serial.println();
+#endif
 
     // Prepare response object
     StaticJsonDocument<256> responseDocument;
@@ -174,8 +183,11 @@ end:
         responseDocument["pairingResponse"] = 0; // Succeeded
     } else {
         responseDocument["pairingResponse"] = -1; // Failed; detail is stored in pairingResponseDetail
+
+#ifdef GUIO_DEBUG
         Serial.print(F("ERROR: "));
         Serial.println(responseDocument["pairingResponseDetail"].as<const char *>());
+#endif
     }
 
     // Send response
@@ -185,12 +197,16 @@ end:
 
     // On success, write parameters and schedule permanent commit
     if (newParameters.configured) {
+#ifdef GUIO_DEBUG
         Serial.println(F("Pairing succeeded! Copying parameters and scheduling restart..."));
+#endif
         memcpy(&parameters, &newParameters, sizeof(parameters_t));
         taskCommitParameters.enableDelayed(); // Enable commit task
     } else {
         // On failure, re-enable blinking LEDs
+#ifdef GUIO_DEBUG
         Serial.println(F("Pairing failed!"));
+#endif        
         taskBlinkLed.enable();
     }
 }

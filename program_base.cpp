@@ -81,13 +81,17 @@ void Program::buttonPressHandler (unsigned int duration)
 #endif
 
     if (duration > 15*TASK_SECOND) {
+#ifdef GUIO_DEBUG
         Serial.println(F("Long press! Clearing EEPROM and rebooting!"));
+#endif
         // clear EEPROM
         clearParametersInEeprom();
         // restart
         restartSystem();
     } else if (duration > 1*TASK_SECOND) {
+#ifdef GUIO_DEBUG
         Serial.println(F("Short press! Rebooting into AP!"));
+#endif
         // set forced AP flag
         parameters.force_ap = true;
         // write to EEPROM
