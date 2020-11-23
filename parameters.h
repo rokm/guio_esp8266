@@ -4,12 +4,6 @@
 #include <Arduino.h>
 
 
-#define GUIO_MODE_STA 0xAA
-#define GUIO_MODE_AP  0xBB
-
-
-static const char GUIO_SIG[4] PROGMEM = { 'G', 'U', 'I', 'O' };
-
 struct parameters_t
 {
     // Header (8 bytes)
@@ -30,6 +24,10 @@ struct parameters_t
     char subscribeTopic[48];
     char publishTopic[48];
 };
+
+
+void parameters_init (parameters_t *const params);
+bool parameters_valid (const parameters_t *params);
 
 
 #endif

@@ -74,30 +74,19 @@ void Program::restartSystem () const
 
 void Program::buttonPressHandler (unsigned int duration)
 {
-#ifdef GUIO_DEBUG
-    Serial.print(F("Button press lasted "));
-    Serial.print(duration);
-    Serial.println(F(" ms..."));
-#endif
+    GDBG_print(F("Button press lasted "));
+    GDBG_print(duration);
+    GDBG_println(F(" ms..."));
 
     if (duration > 15*TASK_SECOND) {
-#ifdef GUIO_DEBUG
-        Serial.println(F("Long press! Clearing EEPROM and rebooting!"));
-#endif
-        // clear EEPROM
-        clearParametersInEeprom();
-        // restart
-        restartSystem();
+        GDBG_println(F("Long press! Clearing EEPROM and rebooting!"));
+        clearParametersInEeprom(); // clear EEPROM
+        restartSystem(); // restart
     } else if (duration > 1*TASK_SECOND) {
-#ifdef GUIO_DEBUG
-        Serial.println(F("Short press! Rebooting into AP!"));
-#endif
-        // set forced AP flag
-        parameters.force_ap = true;
-        // write to EEPROM
-        writeParametersToEeprom();
-        // restart
-        restartSystem();
+        GDBG_println(F("Short press! Rebooting into AP!"));
+        parameters.force_ap = true; // set forced AP flag
+        writeParametersToEeprom(); // write to EEPROM
+        restartSystem(); // restart
     }
 }
 

@@ -4,7 +4,7 @@
 ProgramAp::ProgramAp (parameters_t &parameters)
     : Program(parameters),
       webServer(80),
-      // This task writes the parameters to EEPROM, blinks led 5 times, and restarts the E2866 after 5 seconds...
+      // This task writes the parameters to EEPROM, blinks led 5 times, and restarts the E8266 after 5 seconds...
       taskCommitParameters(
         500*TASK_MILLISECOND,
         10,
@@ -75,8 +75,8 @@ void ProgramAp::pairingRequestHandler (AsyncWebServerRequest *request, JsonVaria
     StaticJsonDocument<256> responseDocument;
 
     // Parse request (and validate fields)
-    parameters_t newParameters;
-    memset(&newParameters, 0, sizeof(parameters_t));
+    parameters_t newParams;
+    parameters_init(&newParams);
 
     if (json.is<JsonObject>()) {
         const JsonObject &requestObject = json.as<JsonObject>();
@@ -88,7 +88,7 @@ void ProgramAp::pairingRequestHandler (AsyncWebServerRequest *request, JsonVaria
             responseDocument["pairingResponseDetail"] = F("Missing networkSsid string field.");
             goto end;
         }
-        if (snprintf(newParameters.networkSsid, sizeof(newParameters.networkSsid), "%s", field.as<const char *>()) >= sizeof(newParameters.networkSsid)) {
+        if (snprintf(newParams.networkSsid, sizeof(newParams.networkSsid), "%s", field.as<const char *>()) >= sizeof(newParams.networkSsid)) {
             responseDocument["pairingResponseDetail"] = F("networkSsid string too long.");
             goto end;
         }
@@ -99,7 +99,7 @@ void ProgramAp::pairingRequestHandler (AsyncWebServerRequest *request, JsonVaria
             responseDocument["pairingResponseDetail"] = F("Missing networkPassword string field.");
             goto end;
         }
-        if (snprintf(newParameters.networkPassword, sizeof(newParameters.networkPassword), "%s", field.as<const char *>()) >= sizeof(newParameters.networkPassword)) {
+        if (snprintf(newParams.networkPassword, sizeof(newParams.networkPassword), "%s", field.as<const char *>()) >= sizeof(newParams.networkPassword)) {
             responseDocument["pairingResponseDetail"] = F("networkPassword string too long.");
             goto end;
         }
@@ -110,7 +110,7 @@ void ProgramAp::pairingRequestHandler (AsyncWebServerRequest *request, JsonVaria
             responseDocument["pairingResponseDetail"] = F("Missing mqttHostName string field.");
             goto end;
         }
-        if (snprintf(newParameters.mqttHostName, sizeof(newParameters.mqttHostName), "%s", field.as<const char *>()) >= sizeof(newParameters.mqttHostName)) {
+        if (snprintf(newParams.mqttHostName, sizeof(newParams.mqttHostName), "%s", field.as<const char *>()) >= sizeof(newParams.mqttHostName)) {
             responseDocument["pairingResponseDetail"] = F("mqttHostName string too long.");
             goto end;
         }
@@ -121,7 +121,7 @@ void ProgramAp::pairingRequestHandler (AsyncWebServerRequest *request, JsonVaria
             responseDocument["pairingResponseDetail"] = F("Missing mqttUserName string field.");
             goto end;
         }
-        if (snprintf(newParameters.mqttUserName, sizeof(newParameters.mqttUserName), "%s", field.as<const char *>()) >= sizeof(newParameters.mqttUserName)) {
+        if (snprintf(newParams.mqttUserName, sizeof(newParams.mqttUserName), "%s", field.as<const char *>()) >= sizeof(newParams.mqttUserName)) {
             responseDocument["pairingResponseDetail"] = F("mqttUserName string too long.");
             goto end;
         }
@@ -132,7 +132,7 @@ void ProgramAp::pairingRequestHandler (AsyncWebServerRequest *request, JsonVaria
             responseDocument["pairingResponseDetail"] = F("Missing mqttUserPassword string field.");
             goto end;
         }
-        if (snprintf(newParameters.mqttUserPassword, sizeof(newParameters.mqttUserPassword), "%s", field.as<const char *>()) >= sizeof(newParameters.mqttUserPassword)) {
+        if (snprintf(newParams.mqttUserPassword, sizeof(newParams.mqttUserPassword), "%s", field.as<const char *>()) >= sizeof(newParams.mqttUserPassword)) {
             responseDocument["pairingResponseDetail"] = F("mqttUserPassword string too long.");
             goto end;
         }
@@ -143,7 +143,7 @@ void ProgramAp::pairingRequestHandler (AsyncWebServerRequest *request, JsonVaria
             responseDocument["pairingResponseDetail"] = F("Missing subscribeTopic string field.");
             goto end;
         }
-        if (snprintf(newParameters.subscribeTopic, sizeof(newParameters.subscribeTopic), "%s", field.as<const char *>()) >= sizeof(newParameters.subscribeTopic)) {
+        if (snprintf(newParams.subscribeTopic, sizeof(newParams.subscribeTopic), "%s", field.as<const char *>()) >= sizeof(newParams.subscribeTopic)) {
             responseDocument["pairingResponseDetail"] = F("subscribeTopic string too long.");
             goto end;
         }
@@ -154,16 +154,13 @@ void ProgramAp::pairingRequestHandler (AsyncWebServerRequest *request, JsonVaria
             responseDocument["pairingResponseDetail"] = F("Missing publishTopic string field.");
             goto end;
         }
-        if (snprintf(newParameters.publishTopic, sizeof(newParameters.publishTopic), "%s", field.as<const char *>()) >= sizeof(newParameters.publishTopic)) {
+        if (snprintf(newParams.publishTopic, sizeof(newParams.publishTopic), "%s", field.as<const char *>()) >= sizeof(newParams.publishTopic)) {
             responseDocument["pairingResponseDetail"] = F("publishTopic string too long.");
             goto end;
         }
 
-        // Initialize header
-        memcpy_P(newParameters.sig, GUIO_SIG, 4);
-        newParameters.version = 1;
-        newParameters.configured = true;
-        newParameters.force_ap = false;
+        // Configured
+        newParams.configured = true;
     } else {
         responseDocument["pairingResponseDetail"] = F("Request not a JSON object.");
     }
@@ -171,7 +168,7 @@ void ProgramAp::pairingRequestHandler (AsyncWebServerRequest *request, JsonVaria
 end:
 
     // If parameters are valid (configured flag is set), we succeeded
-    if (newParameters.configured) {
+    if (newParams.configured) {
         responseDocument["pairingResponse"] = 0; // Succeeded
     } else {
         responseDocument["pairingResponse"] = -1; // Failed; detail is stored in pairingResponseDetail
@@ -184,10 +181,10 @@ end:
     serializeJson(responseDocument, *response);
     request->send(response);
 
-    // On success, write parameters and schedule permanent commit
-    if (newParameters.configured) {
+    // On success, copy parameters and schedule commit to EEPROM
+    if (newParams.configured) {
         GDBG_println(F("Pairing succeeded! Copying parameters and scheduling restart..."));
-        memcpy(&parameters, &newParameters, sizeof(parameters_t));
+        memcpy(&parameters, &newParams, sizeof(parameters_t));
         taskCommitParameters.enableDelayed(); // Enable commit task
     } else {
         // On failure, re-enable blinking LEDs

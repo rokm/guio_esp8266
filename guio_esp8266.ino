@@ -13,7 +13,7 @@ static Program *program = nullptr;
 static parameters_t parameters;
 
 
-void setup() 
+void setup ()
 {
     // Initialize serial
     Serial.begin(115200);
@@ -25,17 +25,16 @@ void setup()
     GDBG_println();
     GDBG_println(F("*** GUI-O loader ***"));
 
-    // Restore settings from EEPROM
+    // Restore parameters from EEPROM
     EEPROM.begin(sizeof(parameters_t));
     EEPROM.get(0, parameters);
 
     bool sta_mode = false;
 
-    if (memcmp_P(parameters.sig, GUIO_SIG, 4)) {
-        GDBG_println(F("GUIO parameters not found... initializing..."));
-        memcpy_P(parameters.sig, GUIO_SIG, 4);
-        parameters.version = 1;
-        parameters.configured = false;
+    if (!parameters_valid(&parameters)) {
+        GDBG_println(F("GUI-O parameters not found... initializing..."));
+        // Clear & initialize
+        parameters_init(&parameters);
         parameters.force_ap = true; // this will force write to EEPROM
     }
 
@@ -45,7 +44,7 @@ void setup()
     GDBG_print(F("STA mode: "));
     GDBG_println(sta_mode);
 
-    // Immediately reset the force-AP flag
+    // Immediately reset the force-AP flag and store
     if (parameters.force_ap) {
         parameters.force_ap = false;
         EEPROM.put(0, parameters);
@@ -58,12 +57,12 @@ void setup()
     } else {
         program = new ProgramAp(parameters);
     }
-    
+
     // ... and initialize it
     program->setup();
 }
 
-void loop() 
+void loop ()
 {
     // Use program's loop function
     program->loop();
