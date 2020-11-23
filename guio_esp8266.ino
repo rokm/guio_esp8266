@@ -9,8 +9,8 @@
 
 
 // global instances
-Program *program = nullptr;
-parameters_t parameters; 
+static Program *program = nullptr;
+static parameters_t parameters;
 
 
 void setup() 

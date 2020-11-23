@@ -1,14 +1,7 @@
 #include "program_base.h"
 
 #include <EEPROM.h>
-
-
-// ISR must be cached in RAM!
-// Also, we have to (ab)use the global program instance because we cannot use class member as an ISR
-ICACHE_RAM_ATTR void isrButton ()
-{
-    program->registerButtonStateChange();
-}
+#include <FunctionalInterrupt.h>
 
 
 Program::Program (parameters_t &parameters)
@@ -27,7 +20,7 @@ void Program::setup ()
     pinMode(D13, OUTPUT);
 
     pinMode(D4, INPUT_PULLUP);
-    attachInterrupt(digitalPinToInterrupt(D4), isrButton, CHANGE);
+    attachInterrupt(digitalPinToInterrupt(D4), std::bind(&Program::buttonPressIsr, this), CHANGE);
 
     taskBlinkLed.enable();
 }
@@ -45,7 +38,7 @@ void Program::loop ()
     scheduler.execute();
 }
 
-void Program::registerButtonStateChange ()
+void Program::buttonPressIsr ()
 {
     buttonStateChanged = true;
 }

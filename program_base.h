@@ -15,8 +15,8 @@ public:
     virtual void setup ();
     virtual void loop ();
 
-    // Called from ISR
-    void registerButtonStateChange ();
+    // Called as ISR
+    void ICACHE_RAM_ATTR buttonPressIsr ();
 
     void buttonPressHandler (unsigned int duration);
 
@@ -37,9 +37,6 @@ protected:
     volatile bool buttonStateChanged;
     unsigned int buttonPressTime;
 };
-
-
-extern Program *program; // global pointer; found in main sketch
 
 
 #endif
