@@ -21,9 +21,7 @@ void ProgramAp::setup ()
 {
     Program::setup();
 
-#ifdef GUIO_DEBUG
-    Serial.println(F("*** AP mode ***"));
-#endif
+    GDBG_println(F("*** AP mode ***"));
 
     // Construct SSID and password
     //  ssid: guio_MAC
@@ -37,21 +35,17 @@ void ProgramAp::setup ()
     //snprintf_P(password, sizeof(password), PSTR("%02x%02x%02x%02x%02x%02x"), macAddr[0], macAddr[1], macAddr[2], macAddr[3], macAddr[4], macAddr[5]);
     snprintf_P(password, sizeof(password), PSTR("12345678"));
 
-#ifdef GUIO_DEBUG
-    Serial.print(F("ssid: "));
-    Serial.println(ssid);
-    Serial.print(F("password: "));
-    Serial.println(password);
-#endif
+    GDBG_print(F("ssid: "));
+    GDBG_println(ssid);
+    GDBG_print(F("password: "));
+    GDBG_println(password);
 
     // Start the AP
     bool rc;
     rc = WiFi.softAP(ssid, password);
 
-#ifdef GUIO_DEBUG
-    Serial.print(F("AP status: "));
-    Serial.println(rc);
-#endif
+    GDBG_print(F("AP status: "));
+    GDBG_println(rc);
 
     // Start the web server
     AsyncCallbackJsonWebHandler *handler = new AsyncCallbackJsonWebHandler("/pair", std::bind(&ProgramAp::pairingRequestHandler, this, std::placeholders::_1, std::placeholders::_2));
@@ -73,11 +67,9 @@ void ProgramAp::pairingRequestHandler (AsyncWebServerRequest *request, JsonVaria
     digitalWrite(LED_BUILTIN, HIGH);
 
     // Dump request
-#ifdef GUIO_DEBUG
-    Serial.print(F("Pairing request: "));
-    serializeJsonPretty(json, Serial);
-    Serial.println();
-#endif
+    GDBG_print(F("Pairing request: "));
+    GDBG_print_json(json);
+    GDBG_println();
 
     // Prepare response object
     StaticJsonDocument<256> responseDocument;
@@ -183,11 +175,8 @@ end:
         responseDocument["pairingResponse"] = 0; // Succeeded
     } else {
         responseDocument["pairingResponse"] = -1; // Failed; detail is stored in pairingResponseDetail
-
-#ifdef GUIO_DEBUG
-        Serial.print(F("ERROR: "));
-        Serial.println(responseDocument["pairingResponseDetail"].as<const char *>());
-#endif
+        GDBG_print(F("ERROR: "));
+        GDBG_println(responseDocument["pairingResponseDetail"].as<const char *>());
     }
 
     // Send response
@@ -197,16 +186,12 @@ end:
 
     // On success, write parameters and schedule permanent commit
     if (newParameters.configured) {
-#ifdef GUIO_DEBUG
-        Serial.println(F("Pairing succeeded! Copying parameters and scheduling restart..."));
-#endif
+        GDBG_println(F("Pairing succeeded! Copying parameters and scheduling restart..."));
         memcpy(&parameters, &newParameters, sizeof(parameters_t));
         taskCommitParameters.enableDelayed(); // Enable commit task
     } else {
         // On failure, re-enable blinking LEDs
-#ifdef GUIO_DEBUG
-        Serial.println(F("Pairing failed!"));
-#endif        
+        GDBG_println(F("Pairing failed!"));
         taskBlinkLed.enable();
     }
 }

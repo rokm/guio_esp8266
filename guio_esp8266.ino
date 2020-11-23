@@ -22,10 +22,8 @@ void setup()
     }
 
     // Print initial newline to clear garbage
-#ifdef GUIO_DEBUG
-    Serial.println();
-    Serial.println(F("*** GUI-O loader ***"));
-#endif
+    GDBG_println();
+    GDBG_println(F("*** GUI-O loader ***"));
 
     // Restore settings from EEPROM
     EEPROM.begin(sizeof(parameters_t));
@@ -34,10 +32,7 @@ void setup()
     bool sta_mode = false;
 
     if (memcmp_P(parameters.sig, GUIO_SIG, 4)) {
-#ifdef GUIO_DEBUG
-        Serial.println(F("GUIO parameters not found... initializing..."));
-#endif
-
+        GDBG_println(F("GUIO parameters not found... initializing..."));
         memcpy_P(parameters.sig, GUIO_SIG, 4);
         parameters.version = 1;
         parameters.configured = false;
@@ -47,10 +42,8 @@ void setup()
     // TODO: validate version, upgrade format, etc.
     sta_mode = parameters.configured && !parameters.force_ap;
 
-#ifdef GUIO_DEBUG
-    Serial.print(F("STA mode: "));
-    Serial.println(sta_mode);
-#endif
+    GDBG_print(F("STA mode: "));
+    GDBG_println(sta_mode);
 
     // Immediately reset the force-AP flag
     if (parameters.force_ap) {

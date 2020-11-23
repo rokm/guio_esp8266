@@ -10,33 +10,29 @@ void ProgramSta::setup ()
 {
     Program::setup ();
 
-#ifdef GUIO_DEBUG
-    Serial.println(F("*** STA mode ***"));
-#endif
+    GDBG_println(F("*** STA mode ***"));
 
     // Display parameters
-#ifdef GUIO_DEBUG
-    Serial.print(F("Network SSID: "));
-    Serial.println(parameters.networkSsid);
+    GDBG_print(F("Network SSID: "));
+    GDBG_println(parameters.networkSsid);
 
-    Serial.print(F("Network password: "));
-    Serial.println(parameters.networkPassword);
+    GDBG_print(F("Network password: "));
+    GDBG_println(parameters.networkPassword);
 
-    Serial.print(F("MQTT host: "));
-    Serial.println(parameters.mqttHostName);
+    GDBG_print(F("MQTT host: "));
+    GDBG_println(parameters.mqttHostName);
 
-    Serial.print(F("MQTT user name: "));
-    Serial.println(parameters.mqttUserName);
+    GDBG_print(F("MQTT user name: "));
+    GDBG_println(parameters.mqttUserName);
 
-    Serial.print(F("MQTT user password: "));
-    Serial.println(parameters.mqttUserPassword);
+    GDBG_print(F("MQTT user password: "));
+    GDBG_println(parameters.mqttUserPassword);
 
-    Serial.print(F("MQTT subscribe topic: "));
-    Serial.println(parameters.subscribeTopic);
+    GDBG_print(F("MQTT subscribe topic: "));
+    GDBG_println(parameters.subscribeTopic);
 
-    Serial.print(F("MQTT publish topic: "));
-    Serial.println(parameters.publishTopic);
-#endif
+    GDBG_print(F("MQTT publish topic: "));
+    GDBG_println(parameters.publishTopic);
 }
 
 void ProgramSta::loop ()
