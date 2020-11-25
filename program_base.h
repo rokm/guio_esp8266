@@ -16,6 +16,8 @@ public:
     virtual void setup ();
     virtual void loop ();
 
+    virtual bool serialInputHandler ();
+
 protected:
     void toggleLed (bool on);
 
@@ -51,6 +53,11 @@ protected:
     // Button handling
     volatile bool buttonStateChanged;
     unsigned int buttonPressTime;
+
+    // Serial input
+    char serialBuffer[256]; // 255 + NULL
+    uint16_t serialLen;
+    uint8_t serialBatch;
 };
 
 

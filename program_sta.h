@@ -13,6 +13,7 @@ public:
 
     void setup () override;
     void loop () override;
+    bool serialInputHandler () override;
 
 protected:
     void taskCheckConnectionFcn ();

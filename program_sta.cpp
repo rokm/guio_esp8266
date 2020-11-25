@@ -65,7 +65,7 @@ void ProgramSta::setup ()
     mqttClient.setServer(parameters.mqttHostName, 1883);
     mqttClient.setCallback(std::bind(&ProgramSta::mqttReceiveCallback, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
 
-    taskCheckConnection.enable();
+    taskCheckConnection.enableDelayed();
 }
 
 void ProgramSta::loop ()
@@ -132,4 +132,23 @@ void ProgramSta::mqttReceiveCallback (char *topic, byte *payload, unsigned int l
         Serial.print((char)(payload[i]));
     }
     Serial.println();
+}
+
+
+bool ProgramSta::serialInputHandler ()
+{
+    // First try with parent handler...
+    if (Program::serialInputHandler()) {
+        return true;
+    }
+
+    // ... then check if it is a pass-through message
+    if (serialBuffer[0] == '$') {
+        if (mqttClient.connected()) {
+            // Publish the message, skipping the pass-through character
+            mqttClient.publish(parameters.publishTopic, serialBuffer + 1);
+        } else {
+            GDBG_println(F("Cannot forward message - MQTT client not connected!"));
+        }
+    }
 }

@@ -63,6 +63,28 @@ void Program::loop ()
 
     // Schedule tasks
     scheduler.execute();
+
+    // Serial input
+    // Read in small batches to avoid potential flood from starving
+    // task scheduler...
+    if (Serial.available()) {
+        serialBatch = 0; // Reset batch counter
+        while (Serial.available() && serialBatch < 32) {
+            char c = Serial.read();
+            serialBatch++;
+
+            if (c == '\n') {
+                serialBuffer[serialLen] = 0; // NULL terminate the buffer
+                serialInputHandler();
+                serialLen = 0; // Reset
+            } else {
+                // Read into buffer, truncate on overflow
+                if (serialLen < sizeof(serialBuffer) - 1) {
+                    serialBuffer[serialLen++] = c;
+                }
+            }
+        }
+    }
 }
 
 
@@ -152,4 +174,35 @@ void Program::taskCheckButtonFcn ()
             buttonPressTime = 0;
         }
     }
+}
+
+
+bool Program::serialInputHandler ()
+{
+    GDBG_print(F("Received line: "));
+    GDBG_println(serialBuffer);
+
+    if (serialBuffer[0] == '!') {
+        // Protocol commands
+        if (strcmp_P(serialBuffer, PSTR("!PING")) == 0) {
+            // Ping - FIXME: add state code
+            Serial.println(F("!PONG"));
+            return true;
+        } else if (strcmp_P(serialBuffer, PSTR("!REBOOT")) == 0) {
+            // Reboot in preferred mode
+            restartSystem();
+            return true;
+        } else if (strcmp_P(serialBuffer, PSTR("!REBOOT_AP")) == 0) {
+            parameters.force_ap = true; // set forced AP flag
+            writeParametersToEeprom(); // write to EEPROM
+            restartSystem(); // restart
+            return true;
+        } else if (strcmp_P(serialBuffer, PSTR("!CLEAR_PARAMS")) == 0) {
+            clearParametersInEeprom(); // clear EEPROM
+            restartSystem(); // restart
+            return true;
+        }
+    }
+
+    return false; // Line not processed
 }
