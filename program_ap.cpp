@@ -191,7 +191,7 @@ end:
     if (newParams.configured) {
         GDBG_println(F("Pairing succeeded! Copying parameters and scheduling restart..."));
         memcpy(&parameters, &newParams, sizeof(parameters_t));
-        taskCommitParameters.enableDelayed(); // Enable commit task
+        taskCommitParameters.enableDelayed(10*TASK_SECOND); // Enable commit task
     } else {
         // On failure, re-enable blinking LEDs
         GDBG_println(F("Pairing failed!"));
