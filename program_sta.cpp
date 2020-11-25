@@ -65,7 +65,12 @@ void ProgramSta::setup ()
     mqttClient.setServer(parameters.mqttHostName, 1883);
     mqttClient.setCallback(std::bind(&ProgramSta::mqttReceiveCallback, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
 
-    taskCheckConnection.enableDelayed();
+    taskCheckConnection.enableDelayed(5*TASK_SECOND); // Schedule first check after 5 seconds
+
+    // Set status
+    statusCode = STATUS_STA_NOWIFI;
+    taskBlinkLed.setInterval(TASK_SECOND);
+    taskBlinkLed.enableIfNot();
 }
 
 void ProgramSta::loop ()
@@ -90,21 +95,26 @@ void ProgramSta::taskCheckConnectionFcn ()
 
                 if (mqttClient.subscribe(parameters.subscribeTopic)) {
                     GDBG_println(F("MQTT client subscribed to topic!"));
+                    statusCode = STATUS_STA_READY;
                 } else {
-                    // FIXME: what to do?
                     GDBG_println(F("MQTT client failed to subscribe to topic!"));
+                    statusCode = STATUS_STA_NOSUB;
+                    // FIXME: how to properly handle this? Disconnect?
                 }
             } else {
                 GDBG_println(F("MQTT client failed to connect!"));
+                statusCode = STATUS_STA_NOMQTT;
             }
         }
 
         if (mqttClient.connected()) {
             GDBG_println(F("MQTT client is connected..."));
+            // Permanently turn the LED on
             taskBlinkLed.disable();
             toggleLed(true);
         } else {
             GDBG_println(F("MQTT client is not connected!"));
+            // Fast blinking
             taskBlinkLed.setInterval(500*TASK_MILLISECOND);
             taskBlinkLed.enableIfNot();
         }
@@ -112,8 +122,11 @@ void ProgramSta::taskCheckConnectionFcn ()
         GDBG_print(F("WiFi not connected; status: "));
         GDBG_println(WiFi.status());
 
+        statusCode = STATUS_STA_NOWIFI;
+
         mqttClient.disconnect();
 
+        // Blinking
         taskBlinkLed.setInterval(TASK_SECOND);
         taskBlinkLed.enableIfNot();
     }

@@ -6,6 +6,7 @@
 
 Program::Program (parameters_t &parameters)
     : parameters(parameters), // store reference to parameters struct
+      statusCode(STATUS_UNKNOWN), // reset status
       scheduler(),
       // Task for blinking the built-in LED. Used as a signalling mechanism
       taskBlinkLed(
@@ -186,7 +187,8 @@ bool Program::serialInputHandler ()
         // Protocol commands
         if (strcmp_P(serialBuffer, PSTR("!PING")) == 0) {
             // Ping - FIXME: add state code
-            Serial.println(F("!PONG"));
+            Serial.print(F("!PONG "));
+            Serial.println(statusCode);
             return true;
         } else if (strcmp_P(serialBuffer, PSTR("!REBOOT")) == 0) {
             // Reboot in preferred mode

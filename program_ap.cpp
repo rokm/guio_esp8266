@@ -53,6 +53,9 @@ void ProgramAp::setup ()
     AsyncCallbackJsonWebHandler *handler = new AsyncCallbackJsonWebHandler("/pair", std::bind(&ProgramAp::pairingRequestHandler, this, std::placeholders::_1, std::placeholders::_2));
     webServer.addHandler(handler);
     webServer.begin();
+
+    // Set status code
+    statusCode = STATUS_AP_READY;
 }
 
 void ProgramAp::loop ()

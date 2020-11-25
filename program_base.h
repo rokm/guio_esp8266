@@ -8,6 +8,20 @@
 #include <ESP8266WiFi.h>
 
 
+enum StatusCode
+{
+    // STA mode
+    STATUS_STA_READY  = 0, // ready & fully operational
+    STATUS_STA_NOSUB  = 1, // connected to both WiFi and MQTT, but MQTT subscribe failed
+    STATUS_STA_NOMQTT = 2, // connected to WiFi, but not connected to MQTT
+    STATUS_STA_NOWIFI = 3, // not connected to WiFi
+    // AP mode
+    STATUS_AP_READY = 100, // in AP mode, ready to be paired
+
+    STATUS_UNKNOWN = 255, // unknown status
+};
+
+
 class Program
 {
 public:
@@ -42,6 +56,9 @@ protected:
 
     // Device ID: guio_ + WiFi MAC
     char deviceId[20]; // guio_AABBCCDDEEFF
+
+    // Program status code - to send with PING reply
+    uint8_t statusCode;
 
     // Task scheduler
     Scheduler scheduler;
