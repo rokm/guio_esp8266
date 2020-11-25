@@ -7,8 +7,26 @@
 Program::Program (parameters_t &parameters)
     : parameters(parameters), // store reference to parameters struct
       scheduler(),
-      taskBlinkLed(1*TASK_SECOND, TASK_FOREVER, std::bind(&Program::taskBlinkLedFcn, this), &scheduler, false, nullptr, nullptr),
-      taskCheckButton(100*TASK_MILLISECOND, TASK_ONCE, std::bind(&Program::taskCheckButtonFcn, this), &scheduler, false, nullptr, nullptr),
+      // Task for blinking the built-in LED. Used as a signalling mechanism
+      taskBlinkLed(
+        250*TASK_MILLISECOND, // this will be later adjusted within the program
+        TASK_FOREVER,
+        std::bind(&Program::taskBlinkLedFcn, this),
+        &scheduler,
+        false,
+        std::bind(&Program::taskBlinkLedOnEnable, this),
+        std::bind(&Program::taskBlinkLedOnDisable, this)
+      ),
+      // Task for checking the button state (for debounce).
+      taskCheckButton(
+        100*TASK_MILLISECOND,
+        TASK_ONCE,
+        std::bind(&Program::taskCheckButtonFcn, this),
+        &scheduler,
+        false,
+        nullptr,
+        nullptr
+      ),
       buttonStateChanged(false),
       buttonPressTime(0)
 {
@@ -16,13 +34,22 @@ Program::Program (parameters_t &parameters)
 
 void Program::setup ()
 {
+    // LEDs
     pinMode(LED_BUILTIN, OUTPUT);
     pinMode(D13, OUTPUT);
 
+    // Button pin (force AP mode, reset EEPROM data)
     pinMode(D4, INPUT_PULLUP);
     attachInterrupt(digitalPinToInterrupt(D4), std::bind(&Program::buttonPressIsr, this), CHANGE);
 
-    taskBlinkLed.enable();
+    // Initialize device ID (guio_ + MAC); used as
+    //  - SSID in AP mode
+    //  - pairing device name in AP mode
+    //  - hostname and in STA mode
+    //  - mqtt client ID in STA mode
+    uint8_t macAddr[6];
+    WiFi.softAPmacAddress(macAddr);
+    snprintf_P(deviceId, sizeof(deviceId), PSTR("guio_%02x%02x%02x%02x%02x%02x"), macAddr[0], macAddr[1], macAddr[2], macAddr[3], macAddr[4], macAddr[5]);
 }
 
 
@@ -38,20 +65,40 @@ void Program::loop ()
     scheduler.execute();
 }
 
+
+void Program::toggleLed (bool on)
+{
+    // LOW = on, HIGH = off
+    digitalWrite(LED_BUILTIN, on ? LOW : HIGH);
+}
+
+
 void Program::buttonPressIsr ()
 {
     buttonStateChanged = true;
 }
 
 
+bool Program::taskBlinkLedOnEnable ()
+{
+    toggleLed(false); // turn off
+    return true;
+}
+
+void Program::taskBlinkLedOnDisable ()
+{
+    toggleLed(false); // turn off
+}
+
 void Program::taskBlinkLedFcn ()
 {
     if (scheduler.currentTask().getRunCounter() % 2) {
-        digitalWrite(LED_BUILTIN, HIGH);
+        toggleLed(true); // turn on
     } else {
-        digitalWrite(LED_BUILTIN, LOW);
+        toggleLed(false); // turn off
     }
 }
+
 
 void Program::clearParametersInEeprom () const
 {

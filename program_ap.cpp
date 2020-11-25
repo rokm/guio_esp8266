@@ -23,20 +23,22 @@ void ProgramAp::setup ()
 
     GDBG_println(F("*** AP mode ***"));
 
-    // Construct SSID and password
-    //  ssid: guio_MAC
-    //  password: MAC
-    uint8_t macAddr[6];
-    WiFi.softAPmacAddress(macAddr);
+    // Set up blinking LEDs to signal AP mode
+    taskBlinkLed.setInterval(500*TASK_MILLISECOND);
+    taskBlinkLed.enable();
 
-    char ssid[20];
+    // Construct SSID and password
+    // FIXME: set password to MAC by using (deviceId + 5)
+    char *ssid = deviceId;
+#if 0
+    char *password = deviceId + 5;
+#else
     char password[20];
-    snprintf_P(ssid, sizeof(ssid), PSTR("guio_%02x%02x%02x%02x%02x%02x"), macAddr[0], macAddr[1], macAddr[2], macAddr[3], macAddr[4], macAddr[5]);
-    //snprintf_P(password, sizeof(password), PSTR("%02x%02x%02x%02x%02x%02x"), macAddr[0], macAddr[1], macAddr[2], macAddr[3], macAddr[4], macAddr[5]);
     snprintf_P(password, sizeof(password), PSTR("12345678"));
+#endif
 
     GDBG_print(F("ssid: "));
-    GDBG_println(ssid);
+    GDBG_println(deviceId);
     GDBG_print(F("password: "));
     GDBG_println(password);
 
@@ -64,7 +66,7 @@ void ProgramAp::pairingRequestHandler (AsyncWebServerRequest *request, JsonVaria
     // Stop blinking LEDs...
     taskBlinkLed.disable();
     // ... and force them ON
-    digitalWrite(LED_BUILTIN, HIGH);
+    toggleLed(true);
 
     // Dump request
     GDBG_print(F("Pairing request: "));
@@ -170,6 +172,7 @@ end:
     // If parameters are valid (configured flag is set), we succeeded
     if (newParams.configured) {
         responseDocument["pairingResponse"] = 0; // Succeeded
+        responseDocument["pairingDeviceName"] = deviceId;
     } else {
         responseDocument["pairingResponse"] = -1; // Failed; detail is stored in pairingResponseDetail
         GDBG_print(F("ERROR: "));
@@ -189,7 +192,7 @@ end:
     } else {
         // On failure, re-enable blinking LEDs
         GDBG_println(F("Pairing failed!"));
-        taskBlinkLed.enable();
+        taskBlinkLed.enableIfNot();
     }
 }
 

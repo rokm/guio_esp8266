@@ -3,6 +3,8 @@
 
 #include "program_base.h"
 
+#include <PubSubClient.h>
+
 
 class ProgramSta : public Program
 {
@@ -11,6 +13,19 @@ public:
 
     void setup () override;
     void loop () override;
+
+protected:
+    void taskCheckConnectionFcn ();
+
+    void mqttReceiveCallback (char *topic, byte *payload, unsigned int length);
+
+protected:
+    char mqttClientId[20]; // guio_MAC
+
+    WiFiClient wifiClient;
+    PubSubClient mqttClient;
+
+    Task taskCheckConnection;
 };
 
 
