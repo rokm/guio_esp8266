@@ -64,6 +64,32 @@ void ProgramAp::loop ()
 }
 
 
+// A helper for copying a string field from JSON object
+static bool copy_string_parameter (const JsonObject &object, const char *fieldName, char *destBuffer, unsigned int destBufferSize, char *errorBuffer, unsigned int errorBufferSize)
+{
+    // Grab the field
+    JsonVariant field = object[fieldName];
+    if (!field) {
+        snprintf_P(errorBuffer, errorBufferSize, PSTR("Field '%s' not found in request object!"), fieldName);
+        return false;
+    }
+
+    // Ensure it is a string
+    const char *value = field.as<const char *>();
+    if (!value) {
+        snprintf_P(errorBuffer, errorBufferSize, PSTR("Field '%s' in request object is not a string!"), fieldName);
+        return false;
+    }
+
+    // Copy its contents (with overflow check)
+    if (snprintf(destBuffer, destBufferSize, "%s", value) >= destBufferSize) {
+        snprintf_P(errorBuffer, errorBufferSize, PSTR("Field '%s' in request object is too long!"), fieldName);
+        return false;
+    }
+
+    return true;
+}
+
 void ProgramAp::pairingRequestHandler (AsyncWebServerRequest *request, JsonVariant &json)
 {
     // Stop blinking LEDs...
@@ -83,91 +109,50 @@ void ProgramAp::pairingRequestHandler (AsyncWebServerRequest *request, JsonVaria
     parameters_t newParams;
     parameters_init(&newParams);
 
+    char errorMessage[256];
+
     if (json.is<JsonObject>()) {
         const JsonObject &requestObject = json.as<JsonObject>();
-        JsonVariant field;
 
         // Network SSID
-        field = requestObject["networkSsid"];
-        if (!field) {
-            responseDocument["pairingResponseDetail"] = F("Missing networkSsid string field.");
-            goto end;
-        }
-        if (snprintf(newParams.networkSsid, sizeof(newParams.networkSsid), "%s", field.as<const char *>()) >= sizeof(newParams.networkSsid)) {
-            responseDocument["pairingResponseDetail"] = F("networkSsid string too long.");
+        if (!copy_string_parameter(requestObject, "networkSsid", newParams.networkSsid, sizeof(newParams.networkSsid), errorMessage, sizeof(errorMessage))) {
             goto end;
         }
 
         // Network password
-        field = requestObject["networkPassword"];
-        if (!field) {
-            responseDocument["pairingResponseDetail"] = F("Missing networkPassword string field.");
-            goto end;
-        }
-        if (snprintf(newParams.networkPassword, sizeof(newParams.networkPassword), "%s", field.as<const char *>()) >= sizeof(newParams.networkPassword)) {
-            responseDocument["pairingResponseDetail"] = F("networkPassword string too long.");
+        if (!copy_string_parameter(requestObject, "networkPassword", newParams.networkPassword, sizeof(newParams.networkPassword), errorMessage, sizeof(errorMessage))) {
             goto end;
         }
 
         // MQTT host
-        field = requestObject["mqttHostName"];
-        if (!field) {
-            responseDocument["pairingResponseDetail"] = F("Missing mqttHostName string field.");
-            goto end;
-        }
-        if (snprintf(newParams.mqttHostName, sizeof(newParams.mqttHostName), "%s", field.as<const char *>()) >= sizeof(newParams.mqttHostName)) {
-            responseDocument["pairingResponseDetail"] = F("mqttHostName string too long.");
+        if (!copy_string_parameter(requestObject, "mqttHostName", newParams.mqttHostName, sizeof(newParams.mqttHostName), errorMessage, sizeof(errorMessage))) {
             goto end;
         }
 
         // MQTT user name
-        field = requestObject["mqttUserName"];
-        if (!field) {
-            responseDocument["pairingResponseDetail"] = F("Missing mqttUserName string field.");
-            goto end;
-        }
-        if (snprintf(newParams.mqttUserName, sizeof(newParams.mqttUserName), "%s", field.as<const char *>()) >= sizeof(newParams.mqttUserName)) {
-            responseDocument["pairingResponseDetail"] = F("mqttUserName string too long.");
+        if (!copy_string_parameter(requestObject, "mqttUserName", newParams.mqttUserName, sizeof(newParams.mqttUserName), errorMessage, sizeof(errorMessage))) {
             goto end;
         }
 
         // MQTT user password
-        field = requestObject["mqttUserPassword"];
-        if (!field) {
-            responseDocument["pairingResponseDetail"] = F("Missing mqttUserPassword string field.");
-            goto end;
-        }
-        if (snprintf(newParams.mqttUserPassword, sizeof(newParams.mqttUserPassword), "%s", field.as<const char *>()) >= sizeof(newParams.mqttUserPassword)) {
-            responseDocument["pairingResponseDetail"] = F("mqttUserPassword string too long.");
+        if (!copy_string_parameter(requestObject, "mqttUserPassword", newParams.mqttUserPassword, sizeof(newParams.mqttUserPassword), errorMessage, sizeof(errorMessage))) {
             goto end;
         }
 
         // MQTT subscribe topic (NOTE: inverted meaning!)
-        field = requestObject["subscribeTopic"];
-        if (!field) {
-            responseDocument["pairingResponseDetail"] = F("Missing subscribeTopic string field.");
-            goto end;
-        }
-        if (snprintf(newParams.publishTopic, sizeof(newParams.publishTopic), "%s", field.as<const char *>()) >= sizeof(newParams.publishTopic)) {
-            responseDocument["pairingResponseDetail"] = F("subscribeTopic string too long.");
+        if (!copy_string_parameter(requestObject, "subscribeTopic", newParams.publishTopic, sizeof(newParams.publishTopic), errorMessage, sizeof(errorMessage))) {
             goto end;
         }
 
         // MQTT publish topic (NOTE: inverted meaning!)
-        field = requestObject["publishTopic"];
-        if (!field) {
-            responseDocument["pairingResponseDetail"] = F("Missing publishTopic string field.");
-            goto end;
-        }
-        if (snprintf(newParams.subscribeTopic, sizeof(newParams.subscribeTopic), "%s", field.as<const char *>()) >= sizeof(newParams.subscribeTopic)) {
-            responseDocument["pairingResponseDetail"] = F("publishTopic string too long.");
+        if (!copy_string_parameter(requestObject, "publishTopic", newParams.subscribeTopic, sizeof(newParams.subscribeTopic), errorMessage, sizeof(errorMessage))) {
             goto end;
         }
 
-        // Configured
+        // Mark as configured
         newParams.configured = true;
     } else {
-        responseDocument["pairingResponseDetail"] = F("Request not a JSON object.");
+        snprintf_P(errorMessage, sizeof(errorMessage), PSTR("Request payload is not a JSON object!"));
     }
 
 end:
@@ -189,9 +174,11 @@ end:
         responseDocument["subscribeTopic"] = newParams.publishTopic; // inverted meaning!
         responseDocument["publishTopic"] = newParams.subscribeTopic; // inverted meaning!
     } else {
-        responseDocument["pairingResponse"] = -1; // Failed; detail is stored in pairingResponseDetail
+        responseDocument["pairingResponse"] = -1; // Failed; error message is stored in pairingResponseDetail
+        responseDocument["pairingResponseDetail"] = errorMessage;
+
         GDBG_print(F("ERROR: "));
-        GDBG_println(responseDocument["pairingResponseDetail"].as<const char *>());
+        GDBG_println(errorMessage);
     }
 
     // Send response
@@ -207,7 +194,7 @@ end:
     if (newParams.configured) {
         GDBG_println(F("Pairing succeeded! Copying parameters and scheduling restart..."));
         memcpy(&parameters, &newParams, sizeof(parameters_t));
-        taskCommitParameters.enableDelayed(10*TASK_SECOND); // Enable commit task
+        taskCommitParameters.enableDelayed(5*TASK_SECOND); // Enable commit task
     } else {
         // On failure, re-enable blinking LEDs
         GDBG_println(F("Pairing failed!"));
