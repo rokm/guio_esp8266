@@ -14,13 +14,9 @@ public:
     ProgramAp (parameters_t &parameters);
 
     void setup () override;
-    void loop () override;
 
 protected:
     void pairingRequestHandler (AsyncWebServerRequest *request, JsonVariant &json);
-
-    bool taskCommitParametersOnEnableFcn ();
-    void taskCommitParametersOnDisableFcn ();
 
 protected:
     AsyncWebServer webServer;

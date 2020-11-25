@@ -11,8 +11,15 @@ ProgramAp::ProgramAp (parameters_t &parameters)
         std::bind(&ProgramAp::taskBlinkLedFcn, this),
         &scheduler,
         false,
-        std::bind(&ProgramAp::taskCommitParametersOnEnableFcn, this),
-        std::bind(&ProgramAp::taskCommitParametersOnDisableFcn, this)
+        [this] () {
+            // OnEnable
+            writeParametersToEeprom();
+            return true;
+        },
+        [this] () {
+            // OnDisable
+            restartSystem();
+        }
       )
 {
 }
@@ -56,11 +63,6 @@ void ProgramAp::setup ()
 
     // Set status code
     statusCode = STATUS_AP_READY;
-}
-
-void ProgramAp::loop ()
-{
-    Program::loop();
 }
 
 
@@ -200,16 +202,4 @@ end:
         GDBG_println(F("Pairing failed!"));
         taskBlinkLed.enableIfNot();
     }
-}
-
-
-bool ProgramAp::taskCommitParametersOnEnableFcn ()
-{
-    writeParametersToEeprom();
-    return true;
-}
-
-void ProgramAp::taskCommitParametersOnDisableFcn ()
-{
-    restartSystem();
 }

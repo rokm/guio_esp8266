@@ -15,8 +15,15 @@ Program::Program (parameters_t &parameters)
         std::bind(&Program::taskBlinkLedFcn, this),
         &scheduler,
         false,
-        std::bind(&Program::taskBlinkLedOnEnable, this),
-        std::bind(&Program::taskBlinkLedOnDisable, this)
+        [this] () {
+            // OnEnable
+            toggleLed(false); // turn off
+            return true;
+        },
+        [this] () {
+            // OnDisable
+            toggleLed(false); // turn off
+        }
       ),
       // Task for checking the button state (for debounce).
       taskCheckButton(
@@ -101,17 +108,6 @@ void Program::buttonPressIsr ()
     buttonStateChanged = true;
 }
 
-
-bool Program::taskBlinkLedOnEnable ()
-{
-    toggleLed(false); // turn off
-    return true;
-}
-
-void Program::taskBlinkLedOnDisable ()
-{
-    toggleLed(false); // turn off
-}
 
 void Program::taskBlinkLedFcn ()
 {

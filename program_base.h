@@ -35,16 +35,11 @@ public:
 protected:
     void toggleLed (bool on);
 
-    // Called as ISR
-    void ICACHE_RAM_ATTR buttonPressIsr ();
-
+    void ICACHE_RAM_ATTR buttonPressIsr (); // Called as ISR
+    void taskCheckButtonFcn ();
     void buttonPressHandler (unsigned int duration);
 
-    bool taskBlinkLedOnEnable ();
-    virtual void taskBlinkLedFcn ();
-    void taskBlinkLedOnDisable ();
-
-    void taskCheckButtonFcn ();
+    void taskBlinkLedFcn ();
 
     void clearParametersInEeprom () const;
     void writeParametersToEeprom () const;
