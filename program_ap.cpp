@@ -77,7 +77,7 @@ void ProgramAp::pairingRequestHandler (AsyncWebServerRequest *request, JsonVaria
     GDBG_println();
 
     // Prepare response object
-    StaticJsonDocument<256> responseDocument;
+    StaticJsonDocument<320> responseDocument;
 
     // Parse request (and validate fields)
     parameters_t newParams;
@@ -176,6 +176,18 @@ end:
     if (newParams.configured) {
         responseDocument["pairingResponse"] = 0; // Succeeded
         responseDocument["pairingDeviceName"] = deviceId;
+
+        // Copy back the parameter fields that were given in the input
+        // request. This is somewhat redundant, but on the other hand,
+        // it will ensure that they were correctly copied over into
+        // our internal parameters...
+        responseDocument["networkSsid"] = newParams.networkSsid;
+        responseDocument["networkPassword"] = newParams.networkPassword;
+        responseDocument["mqttHostName"] = newParams.mqttHostName;
+        responseDocument["mqttUserName"] = newParams.mqttUserName;
+        responseDocument["mqttUserPassword"] = newParams.mqttUserPassword;
+        responseDocument["subscribeTopic"] = newParams.subscribeTopic;
+        responseDocument["publishTopic"] = newParams.publishTopic;
     } else {
         responseDocument["pairingResponse"] = -1; // Failed; detail is stored in pairingResponseDetail
         GDBG_print(F("ERROR: "));
@@ -183,6 +195,10 @@ end:
     }
 
     // Send response
+    GDBG_print(F("Pairing response: "));
+    GDBG_print_json(responseDocument);
+    GDBG_println();
+
     AsyncResponseStream *response = request->beginResponseStream("application/json");
     serializeJson(responseDocument, *response);
     request->send(response);
