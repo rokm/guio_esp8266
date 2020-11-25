@@ -142,24 +142,24 @@ void ProgramAp::pairingRequestHandler (AsyncWebServerRequest *request, JsonVaria
             goto end;
         }
 
-        // MQTT subscribe topic
+        // MQTT subscribe topic (NOTE: inverted meaning!)
         field = requestObject["subscribeTopic"];
         if (!field) {
             responseDocument["pairingResponseDetail"] = F("Missing subscribeTopic string field.");
             goto end;
         }
-        if (snprintf(newParams.subscribeTopic, sizeof(newParams.subscribeTopic), "%s", field.as<const char *>()) >= sizeof(newParams.subscribeTopic)) {
+        if (snprintf(newParams.publishTopic, sizeof(newParams.publishTopic), "%s", field.as<const char *>()) >= sizeof(newParams.publishTopic)) {
             responseDocument["pairingResponseDetail"] = F("subscribeTopic string too long.");
             goto end;
         }
 
-        // MQTT publish topic
+        // MQTT publish topic (NOTE: inverted meaning!)
         field = requestObject["publishTopic"];
         if (!field) {
             responseDocument["pairingResponseDetail"] = F("Missing publishTopic string field.");
             goto end;
         }
-        if (snprintf(newParams.publishTopic, sizeof(newParams.publishTopic), "%s", field.as<const char *>()) >= sizeof(newParams.publishTopic)) {
+        if (snprintf(newParams.subscribeTopic, sizeof(newParams.subscribeTopic), "%s", field.as<const char *>()) >= sizeof(newParams.subscribeTopic)) {
             responseDocument["pairingResponseDetail"] = F("publishTopic string too long.");
             goto end;
         }
@@ -186,8 +186,8 @@ end:
         responseDocument["mqttHostName"] = newParams.mqttHostName;
         responseDocument["mqttUserName"] = newParams.mqttUserName;
         responseDocument["mqttUserPassword"] = newParams.mqttUserPassword;
-        responseDocument["subscribeTopic"] = newParams.subscribeTopic;
-        responseDocument["publishTopic"] = newParams.publishTopic;
+        responseDocument["subscribeTopic"] = newParams.publishTopic; // inverted meaning!
+        responseDocument["publishTopic"] = newParams.subscribeTopic; // inverted meaning!
     } else {
         responseDocument["pairingResponse"] = -1; // Failed; detail is stored in pairingResponseDetail
         GDBG_print(F("ERROR: "));

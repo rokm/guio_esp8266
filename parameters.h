@@ -21,6 +21,10 @@ struct parameters_t
     char mqttUserName[32];
     char mqttUserPassword[32];
 
+    // NOTE: subscribe and public topics are defined with respect to
+    // our (ESP2866) side. In other words, they are swapped with respect
+    // to what we get in the pairing request (where the meaning is
+    // defined from the perspective of the GUI-O phone app).
     char subscribeTopic[48];
     char publishTopic[48];
 };
