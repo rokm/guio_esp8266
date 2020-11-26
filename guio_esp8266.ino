@@ -21,9 +21,11 @@ void setup ()
         // Wait for serial port to connect
     }
 
-    // Print initial newline to clear garbage
+    // Print banner (will probably be lost due to initial garbage from
+    // bootloader, which runs at 74880 bps)
     GDBG_println();
-    GDBG_println(F("*** GUI-O loader ***"));
+    GDBG_println(F("**** GUI-O ESP8266 ****"));
+    GDBG_println();
 
     // Restore parameters from EEPROM
     EEPROM.begin(sizeof(parameters_t));
@@ -40,9 +42,6 @@ void setup ()
 
     // TODO: validate version, upgrade format, etc.
     sta_mode = parameters.configured && !parameters.force_ap;
-
-    GDBG_print(F("STA mode: "));
-    GDBG_println(sta_mode);
 
     // Immediately reset the force-AP flag and store
     if (parameters.force_ap) {
