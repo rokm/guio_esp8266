@@ -42,18 +42,17 @@ Program::Program (parameters_t &parameters)
 
 void Program::setup ()
 {
-    // LEDs
-    pinMode(LED_BUILTIN, OUTPUT);
-    pinMode(D13, OUTPUT);
+    // LED
+    pinMode(_GUIO_LED_MAIN, OUTPUT);
 
     // Button pin (force AP mode, reset EEPROM data)
-    pinMode(D4, INPUT_PULLUP);
-    attachInterrupt(digitalPinToInterrupt(D4), std::bind(&Program::buttonPressIsr, this), CHANGE);
+    pinMode(_GUIO_AP_BUTTON, INPUT_PULLUP);
+    attachInterrupt(digitalPinToInterrupt(_GUIO_AP_BUTTON), std::bind(&Program::buttonPressIsr, this), CHANGE);
 
     // Initialize device ID (guio_ + MAC); used as
     //  - SSID in AP mode
     //  - pairing device name in AP mode
-    //  - hostname and in STA mode
+    //  - hostname in STA mode
     //  - mqtt client ID in STA mode
     uint8_t macAddr[6];
     WiFi.softAPmacAddress(macAddr);
@@ -99,7 +98,7 @@ void Program::loop ()
 void Program::toggleLed (bool on)
 {
     // LOW = on, HIGH = off
-    digitalWrite(LED_BUILTIN, on ? LOW : HIGH);
+    digitalWrite(_GUIO_LED_MAIN, on ? LOW : HIGH);
 }
 
 
@@ -159,7 +158,7 @@ void Program::buttonPressHandler (unsigned int duration)
 void Program::taskCheckButtonFcn ()
 {
     // Pull-up; HIGH = no contact, LOW = contact
-    byte state = digitalRead(D4);
+    byte state = digitalRead(_GUIO_AP_BUTTON);
     if (state == LOW) {
         // Store press time, but only if it is invalid; if it is valid, we're likely observing bounce
         if (!buttonPressTime) {

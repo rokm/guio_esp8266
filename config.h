@@ -6,9 +6,14 @@
 #define _GUIO_DEBUG
 
 
-// Settings for TaskScheduler
-#define _TASK_SLEEP_ON_IDLE_RUN
-#define _TASK_STD_FUNCTION
+// Serial communication baud rate
+#define _GUIO_SERIAL_BAUDRATE 115200
+
+// LED used for main signalling tasks (e.g., built-in LED)
+#define _GUIO_LED_MAIN LED_BUILTIN
+
+// Pin that serves as AP/reset button
+#define _GUIO_AP_BUTTON D4
 
 
 // Debug macros
@@ -23,6 +28,11 @@
     #define GDBG_println(x)
     #define GDBG_print_json(x)
 #endif
+
+
+// Settings for TaskScheduler
+#define _TASK_SLEEP_ON_IDLE_RUN
+#define _TASK_STD_FUNCTION
 
 
 #endif

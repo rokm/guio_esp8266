@@ -16,7 +16,7 @@ static parameters_t parameters;
 void setup ()
 {
     // Initialize serial
-    Serial.begin(115200);
+    Serial.begin(_GUIO_SERIAL_BAUDRATE);
     while (!Serial) {
         // Wait for serial port to connect
     }
