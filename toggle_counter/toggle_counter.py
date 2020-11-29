@@ -97,7 +97,7 @@ class Application:
     def send_command(self, command):
         self._transport.write(b"$")
         self._transport.write(command.encode("ascii"))
-        self._transport.write(b"\n")
+        self._transport.write(b"\r\n")  # use CRLF
 
     def handle_line(self, line):
         self._logger.debug(f"Processing line: {line}")
