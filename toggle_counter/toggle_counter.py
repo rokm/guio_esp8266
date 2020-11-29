@@ -144,6 +144,16 @@ class Application:
 
 
 class GuioCommHandler(asyncio.Protocol):
+    # Keep in sync with definitions in module code
+    _PONG_CODES = {
+        0: 'STATUS_STA_READY',
+        1: 'STATUS_STA_NOSUB',
+        2: 'STATUS_STA_NOMQTT',
+        3: 'STATUS_STA_NOWIFI',
+        100: 'STATUS_AP_READY',
+        255: 'STATUS_UNKNOWN'
+    }
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._program = None
@@ -157,6 +167,17 @@ class GuioCommHandler(asyncio.Protocol):
 
         # Set serial parameters
         # transport.serial.rts = False
+
+        # Create task for periodic ping
+        self._taskPing = asyncio.ensure_future(
+            self.task_ping(), loop=self.transport.loop
+        )
+
+    async def task_ping(self):
+        while True:
+            self._logger.debug("Sending PING...")
+            self.transport.write(b"!PING\r\n")
+            await asyncio.sleep(60)  # once per minute
 
     def data_received(self, data):
         self._logger.debug(f"Serial received {len(data)} bytes: {data}")
@@ -210,11 +231,17 @@ class GuioCommHandler(asyncio.Protocol):
                 )
         elif line.startswith("!"):
             # ESP8266 module protocol
-            line = line[1:]
-            self._logger.info(f"ESP8266 message: {line}")
+            if line.startswith('!PONG '):
+                # Handle PONG
+                tokens = line.split(' ')
+                code = int(tokens[1])
+                status = self._PONG_CODES.get(code, f'<unknown: {code}>')
+                self._logger.info(f"ESP8266 PONG: {status}")
+            else:
+                self._logger.info(f"ESP8266 message: {line}")
         else:
             # Debug line
-            self._logger.debug(f"debug message: {line}")
+            self._logger.debug(f"Aux message: {line}")
 
 
 def main():
