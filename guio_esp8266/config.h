@@ -1,3 +1,12 @@
+/*
+ * GUI-O ESP8266 bridge
+ * Project configuration and settings.
+ *
+ * Copyright (C) 2020, Rok Mandeljc
+ *
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
+
 #ifndef GUIO_ESP8266__CONFIG_H
 #define GUIO_ESP8266__CONFIG_H
 

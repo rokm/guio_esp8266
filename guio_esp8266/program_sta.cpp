@@ -1,3 +1,12 @@
+/*
+ * GUI-O ESP8266 bridge
+ * STA program implementation.
+ *
+ * Copyright (C) 2020, Rok Mandeljc
+ *
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
+
 #include "program_sta.h"
 
 

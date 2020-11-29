@@ -1,3 +1,12 @@
+/*
+ * GUI-O ESP8266 bridge
+ * Base program class.
+ *
+ * Copyright (C) 2020, Rok Mandeljc
+ *
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
+
 #ifndef GUIO_ESP8266__PROGRAM_BASE_H
 #define GUIO_ESP8266__PROGRAM_BASE_H
 

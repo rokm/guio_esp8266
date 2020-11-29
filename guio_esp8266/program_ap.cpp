@@ -1,3 +1,12 @@
+/*
+ * GUI-O ESP8266 bridge
+ * AP program implementation.
+ *
+ * Copyright (C) 2020, Rok Mandeljc
+ *
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
+
 #include "program_ap.h"
 
 

@@ -1,3 +1,13 @@
+/*
+ * GUI-O ESP8266 bridge
+ * Program parameters as stored in EEPROM.
+ *
+ * Copyright (C) 2020, Rok Mandeljc
+ *
+ * SPDX-License-Identifier: BSD-3-Clause
+ *
+ */
+
 #include "parameters.h"
 
 

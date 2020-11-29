@@ -1,3 +1,12 @@
+/*
+ * GUI-O ESP8266 bridge
+ * Main Arduino sketch.
+ *
+ * Copyright (C) 2020, Rok Mandeljc
+ *
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
+
 #include "config.h"
 #include "parameters.h"
 #include "program_ap.h"

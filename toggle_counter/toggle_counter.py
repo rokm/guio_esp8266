@@ -1,3 +1,12 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+#
+# Toggle Counter demo application for GUI-O ESP8266 bridge.
+#
+# Copyright (C) 2020, Rok Mandeljc
+#
+# SPDX-License-Identifier: BSD-3-Clause
+
 import argparse
 import math
 import datetime
