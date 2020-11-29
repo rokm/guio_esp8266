@@ -90,9 +90,17 @@ void Program::loop ()
             serialBatch++;
 
             if (c == '\n') {
-                serialBuffer[serialLen] = 0; // NULL terminate the buffer
+                // NULL terminate the buffer
+                serialBuffer[serialLen] = 0;
+                // Check if preceding character was \r; if it was, strip
+                // it away
+                if (serialLen > 0 && serialBuffer[serialLen-1] == '\r') {
+                    serialBuffer[--serialLen] = 0;
+                }
+                // Process the line
                 serialInputHandler();
-                serialLen = 0; // Reset
+                // Reset buffer length
+                serialLen = 0;
             } else {
                 // Read into buffer, truncate on overflow
                 if (serialLen < sizeof(serialBuffer) - 1) {
