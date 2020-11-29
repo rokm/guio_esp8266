@@ -242,7 +242,17 @@ def main():
         help="Communication baudrate.",
         default=115200,
     )
+    parser.add_argument(
+        "--log-level",
+        metavar="level",
+        choices=('DEBUG', 'INFO', 'WARN', 'ERROR', 'CRITICAL'),
+        help="Log level.",
+        default='INFO',
+    )
     args = parser.parse_args()
+
+    # Apply log level to root logger
+    logging.getLogger().setLevel(args.log_level)
 
     # Main event loop
     loop = asyncio.get_event_loop()
