@@ -182,25 +182,23 @@ class GuioCommHandler(asyncio.Protocol):
     def data_received(self, data):
         self._logger.debug(f"Serial received {len(data)} bytes: {data}")
 
-        while data:
-            idx = data.find(b"\r\n")
+        # Append everything to the buffer
+        self._buffer += data
+
+        # Process buffer - extract lines
+        while len(self._buffer):
+            # Find next CRLF, ...
+            idx = self._buffer.find(b'\r\n')
             if idx == -1:
-                # No delimiter; append everything
-                self._buffer += data
                 break
+            # ... extract the line, ...
+            line = self._buffer[0:idx]
+            self._buffer = self._buffer[idx+2:]
+            # ... and process it
+            if line:
+                self._handle_line(line)
             else:
-                # Append up to delimiter...
-                self._buffer += data[:idx]
-
-                # ... process line ...
-                if self._buffer:
-                    self._handle_line(self._buffer)
-                else:
-                    self._logger.warning("Received empty line!")
-
-                # ... and clear both data and line buffer
-                data = data[idx+2:]
-                self._buffer = b""
+                self._logger.warning("Received empty line!")
 
     def connection_lost(self, exc):
         self._logger.info("Serial port closed!")
