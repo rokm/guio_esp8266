@@ -148,6 +148,15 @@ void ProgramSta::mqttReceiveCallback (char *topic, byte *payload, unsigned int l
     GDBG_print(F(" bytes from MQTT topic "));
     GDBG_println(topic);
 
+    // Strip trailing newline character(s) to avoid duplication (we
+    // forward the line with added CRLF)
+    while (length > 0 && (payload[length-1] == '\n' || payload[length-1] == '\r')) {
+        length--;
+    }
+
+    GDBG_print(F("Message length: "));
+    GDBG_println(length);
+
     // Write payload to serial as a pass-through message
     Serial.print('$');
     for (unsigned int i = 0; i < length; i++) {
